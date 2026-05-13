@@ -7,12 +7,15 @@ import Image from "next/image";
 import { useState, useRef } from "react";
 import { ChevronLeft, ShoppingBag, Share2, Heart, Star, Check, ArrowRight } from "lucide-react";
 
-export default async function ProductDetails({
+import React from "react";
+
+export default function ProductDetails({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id } = React.use(params);
+  const router = useRouter();
   const shoe = sneakers.find((s) => s.id === id) || sneakers[0];
   
   // Note: Client components inside here would need to be updated too if they use hooks incorrectly
