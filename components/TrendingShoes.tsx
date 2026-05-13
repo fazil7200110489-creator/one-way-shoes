@@ -3,65 +3,78 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { sneakers } from "@/lib/data";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 export default function TrendingShoes() {
   const trending = sneakers.filter(s => s.trending);
 
   return (
-    <section className="py-20 px-6 bg-secondary/50">
-      <div className="mb-10">
-        <h2 className="text-3xl font-heading font-black tracking-tight">TRENDING</h2>
-        <p className="text-white/40 text-sm">Most wanted right now</p>
+    <section className="py-24 px-6 relative overflow-hidden">
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/5 blur-[150px] pointer-events-none" />
+      
+      <div className="mb-12">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-4xl font-heading font-black tracking-tighter uppercase leading-none mb-2">Trending</h2>
+          <p className="text-white/20 text-[10px] font-black tracking-[0.4em] uppercase">Most Wanted Right Now</p>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
+      <div className="grid grid-cols-1 gap-6">
         {trending.map((shoe, idx) => (
           <motion.div
             key={shoe.id}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="glass-dark rounded-[2.5rem] p-4 flex gap-4 items-center group relative"
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ delay: idx * 0.1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="relative w-1/3 aspect-square bg-white/5 rounded-[2rem] overflow-hidden">
-              <Image
-                src={shoe.image}
-                alt={shoe.name}
-                fill
-                className="object-contain p-2 group-hover:scale-110 transition-transform duration-500"
-              />
-            </div>
-
-            <div className="flex-1 py-2">
-              <h3 className="font-heading font-bold text-lg mb-1 leading-tight">{shoe.name}</h3>
-              <p className="text-accent font-bold mb-3">${shoe.price}</p>
-              
-              <div className="flex gap-2 mb-4">
-                {shoe.colors.map((color, i) => (
-                  <div
-                    key={i}
-                    className="w-3 h-3 rounded-full border border-white/20"
-                    style={{ backgroundColor: color }}
+            <Link href={`/product/${shoe.id}`}>
+              <div className="glass-dark rounded-[2.5rem] p-5 flex gap-6 items-center group relative overflow-hidden active:scale-[0.98] transition-all">
+                <div className="relative w-[120px] aspect-square bg-white/[0.03] rounded-[2rem] overflow-hidden flex-shrink-0">
+                  <Image
+                    src={shoe.image}
+                    alt={shoe.name}
+                    fill
+                    className="object-contain p-3 group-hover:scale-110 transition-transform duration-700"
                   />
-                ))}
-              </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                </div>
 
-              <div className="flex gap-2">
-                <button className="bg-white text-black p-2 rounded-xl flex-1 text-xs font-bold flex items-center justify-center gap-2">
-                  <ShoppingBag size={14} /> ORDER NOW
-                </button>
-                <button className="glass p-2 rounded-xl">
-                  <Heart size={14} className="text-white/60" />
-                </button>
+                <div className="flex-1 py-2 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-heading font-black text-lg leading-none uppercase tracking-tighter">{shoe.name}</h3>
+                    <ArrowUpRight size={16} className="text-white/20 group-hover:text-accent group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+                  </div>
+                  
+                  <div className="flex items-center gap-4">
+                    <span className="text-accent font-black text-xl tracking-tighter">${shoe.price}</span>
+                    <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Available Now</span>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    {shoe.colors.map((color, i) => (
+                      <div
+                        key={i}
+                        className="w-2.5 h-2.5 rounded-full ring-1 ring-white/10"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Background Accent Glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/[0.02] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               </div>
-            </div>
-            
-            {/* Background Glow on hover */}
-            <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[2.5rem] -z-10" />
+            </Link>
           </motion.div>
         ))}
       </div>
     </section>
   );
 }
+

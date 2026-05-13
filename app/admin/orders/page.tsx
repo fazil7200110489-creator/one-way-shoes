@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   CheckCircle2, 
@@ -14,18 +14,53 @@ import {
   Package,
   Plus,
   CreditCard,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 
-const mockOrders = [
-  { id: "ORD-8921", customer: "Sarah Chen", shoe: "AURORA GHOST", price: 349, status: "Pending", time: "2 mins ago" },
-  { id: "ORD-8920", customer: "James Wilson", shoe: "CYBER CORE X1", price: 299, status: "Verified", time: "1 hour ago" },
-  { id: "ORD-8919", customer: "Elena Rossi", shoe: "ONYX STEALTH", price: 320, status: "Rejected", time: "5 hours ago" },
-];
-
 export default function AdminOrders() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch("/api/orders");
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setOrders(data);
+      } else {
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handleStatusUpdate = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        setSelectedOrder(null);
+        fetchOrders();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -51,9 +86,14 @@ export default function AdminOrders() {
       </header>
 
       <div className="space-y-4">
-        {mockOrders.map((order, idx) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 opacity-20">
+            <Loader2 className="animate-spin mb-4" size={32} />
+            <p className="text-xs font-bold tracking-widest uppercase">Fetching Orders...</p>
+          </div>
+        ) : orders.map((order, idx) => (
           <motion.div
-            key={order.id}
+            key={order._id}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
@@ -62,16 +102,18 @@ export default function AdminOrders() {
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black text-white/40">{order.id}</span>
+                <span className="text-[10px] font-black text-white/40">{order._id.slice(-8)}</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${getStatusColor(order.status)}`}>
                   {getStatusIcon(order.status)} {order.status.toUpperCase()}
                 </span>
               </div>
-              <h3 className="font-heading font-bold text-sm uppercase">{order.customer}</h3>
-              <p className="text-xs text-white/60">{order.shoe} • ${order.price}</p>
+              <h3 className="font-heading font-bold text-sm uppercase">{order.customerName}</h3>
+              <p className="text-xs text-white/60">{order.productName} • ${order.amount}</p>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <span className="text-[10px] text-white/20 font-bold">{order.time}</span>
+              <span className="text-[10px] text-white/20 font-bold">
+                {new Date(order.createdAt).toLocaleDateString()}
+              </span>
               <ChevronRight size={18} className="text-white/20" />
             </div>
           </motion.div>
@@ -98,15 +140,15 @@ export default function AdminOrders() {
               <div className="glass rounded-[2rem] p-6 space-y-4">
                 <div className="flex justify-between border-b border-white/5 pb-4">
                   <span className="text-white/40 text-xs font-bold uppercase">Customer</span>
-                  <span className="text-sm font-bold uppercase">{selectedOrder.customer}</span>
+                  <span className="text-sm font-bold uppercase">{selectedOrder.customerName}</span>
                 </div>
                 <div className="flex justify-between border-b border-white/5 pb-4">
                   <span className="text-white/40 text-xs font-bold uppercase">Product</span>
-                  <span className="text-sm font-bold uppercase">{selectedOrder.shoe}</span>
+                  <span className="text-sm font-bold uppercase">{selectedOrder.productName}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/40 text-xs font-bold uppercase">Amount</span>
-                  <span className="text-accent font-bold text-lg">${selectedOrder.price}</span>
+                  <span className="text-accent font-bold text-lg">${selectedOrder.amount}</span>
                 </div>
               </div>
 
@@ -114,19 +156,30 @@ export default function AdminOrders() {
               <div className="space-y-4">
                 <h3 className="text-xs font-black tracking-widest text-white/40 uppercase px-4">Payment Verification</h3>
                 <div className="relative aspect-[9/16] w-full bg-white/5 rounded-[2.5rem] overflow-hidden flex items-center justify-center">
-                  <div className="text-center p-10 opacity-30">
-                    <Smartphone size={48} className="mx-auto mb-4" />
-                    <p className="text-xs font-bold">SCREENSHOT PREVIEW</p>
-                  </div>
-                  <div className="absolute top-4 right-4 glass p-2 rounded-xl">
-                    <ExternalLink size={16} />
-                  </div>
+                  {selectedOrder.paymentScreenshot ? (
+                    <Image src={selectedOrder.paymentScreenshot} alt="Payment" fill className="object-cover" />
+                  ) : (
+                    <div className="text-center p-10 opacity-30">
+                      <Smartphone size={48} className="mx-auto mb-4" />
+                      <p className="text-xs font-bold">NO SCREENSHOT UPLOADED</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4">
-                <button className="bg-red-500/20 text-red-400 font-bold py-4 rounded-2xl border border-red-500/30">REJECT</button>
-                <button className="bg-green-500/20 text-green-400 font-bold py-4 rounded-2xl border border-green-500/30">VERIFY</button>
+                <button 
+                  onClick={() => handleStatusUpdate(selectedOrder._id, "Rejected")}
+                  className="bg-red-500/20 text-red-400 font-bold py-4 rounded-2xl border border-red-500/30"
+                >
+                  REJECT
+                </button>
+                <button 
+                  onClick={() => handleStatusUpdate(selectedOrder._id, "Verified")}
+                  className="bg-green-500/20 text-green-400 font-bold py-4 rounded-2xl border border-green-500/30"
+                >
+                  VERIFY
+                </button>
               </div>
 
               <button className="w-full glass py-4 rounded-2xl text-accent font-bold flex items-center justify-center gap-2">
@@ -150,3 +203,4 @@ export default function AdminOrders() {
     </main>
   );
 }
+

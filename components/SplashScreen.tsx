@@ -7,7 +7,7 @@ export default function SplashScreen() {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(false), 3000);
+    const timer = setTimeout(() => setIsVisible(false), 3500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -17,51 +17,61 @@ export default function SplashScreen() {
         <motion.div
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black"
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black overflow-hidden"
         >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="relative"
-          >
-            <h1 className="text-4xl font-heading font-black tracking-tighter text-white text-glow">
-              ONE WAY
-            </h1>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ delay: 0.5, duration: 1 }}
-              className="h-[2px] bg-accent mt-1"
-            />
-            <h2 className="text-xl font-sans font-light tracking-[0.5em] text-white/50 text-center mt-2">
-              SHOES
-            </h2>
-          </motion.div>
+          <div className="absolute inset-0 bg-grain pointer-events-none" />
           
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.5, duration: 0.5 }}
-            className="absolute bottom-20"
+            transition={{ duration: 1 }}
+            className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.05)_0%,transparent_70%)]"
+          />
+
+          <div className="relative overflow-hidden py-10">
+            <motion.h1
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="text-5xl font-heading font-black tracking-tighter text-white text-glow mb-1"
+            >
+              ONE WAY
+            </motion.h1>
+            
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1.5, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="h-[1px] bg-gradient-to-r from-transparent via-white to-transparent"
+            />
+            
+            <motion.h2
+              initial={{ y: "-100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="text-sm font-sans font-black tracking-[1em] text-white/40 text-center mt-3 ml-[1em]"
+            >
+              SHOES
+            </motion.h2>
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2, duration: 1 }}
+            className="absolute bottom-20 flex flex-col items-center gap-4"
           >
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    opacity: [0.3, 1, 0.3],
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
-                  className="w-2 h-2 rounded-full bg-accent"
-                />
-              ))}
+            <span className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase">
+              Initializing Experience
+            </span>
+            <div className="w-48 h-[1px] bg-white/5 relative overflow-hidden">
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-accent to-transparent"
+              />
             </div>
           </motion.div>
         </motion.div>
@@ -69,3 +79,4 @@ export default function SplashScreen() {
     </AnimatePresence>
   );
 }
+
