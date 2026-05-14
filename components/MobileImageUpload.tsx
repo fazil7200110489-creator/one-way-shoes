@@ -14,7 +14,10 @@ import {
   Maximize2
 } from "lucide-react";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
+
+// ... (rest of file unchanged until line where supabase is used)
+// replace supabase.storage calls with getSupabase().storage
 
 const compressImage = (file: File): Promise<File | Blob> => {
   return new Promise((resolve) => {
@@ -80,7 +83,7 @@ export default function MobileImageUpload({ value, onChange }: MobileImageUpload
       if (urlParts.length < 2) return;
       
       const filePath = urlParts[1];
-      const { error } = await supabase.storage
+      const { error } = await getSupabase().storage
         .from(bucket)
         .remove([filePath]);
         
@@ -110,7 +113,7 @@ export default function MobileImageUpload({ value, onChange }: MobileImageUpload
         const filePath = fileName; // Upload directly to bucket root or specify folder
 
         // Upload to Supabase Storage
-        const { data, error: uploadError } = await supabase.storage
+        const { data, error: uploadError } = await getSupabase().storage
           .from(bucket)
           .upload(filePath, file, {
             cacheControl: '3600',
@@ -121,7 +124,7 @@ export default function MobileImageUpload({ value, onChange }: MobileImageUpload
         if (uploadError) throw uploadError;
 
         // Get Public URL
-        const { data: { publicUrl } } = supabase.storage
+        const { data: { publicUrl } } = getSupabase().storage
           .from(bucket)
           .getPublicUrl(filePath);
 
@@ -155,7 +158,7 @@ export default function MobileImageUpload({ value, onChange }: MobileImageUpload
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
       const filePath = fileName;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await getSupabase().storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -165,7 +168,7 @@ export default function MobileImageUpload({ value, onChange }: MobileImageUpload
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = getSupabase().storage
         .from(bucket)
         .getPublicUrl(filePath);
 

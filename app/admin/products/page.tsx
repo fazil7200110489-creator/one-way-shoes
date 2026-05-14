@@ -19,7 +19,9 @@ import {
 import Image from "next/image";
 import AdminNavbar from "@/components/AdminNavbar";
 import MobileImageUpload from "@/components/MobileImageUpload";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
+
+const supabase = getSupabase();
 
 export default function AdminProducts() {
   const [productList, setProductList] = useState<any[]>([]);
