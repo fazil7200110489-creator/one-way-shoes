@@ -1,79 +1,102 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, User, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Lock, User, ArrowRight, Loader2 } from "lucide-react";
 
 export default function AdminLogin() {
-  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate login
-    setTimeout(() => {
+    setError("");
+
+    // Simple demo auth - in production use proper API + JWT
+    if (username === "admin" && password === "oneway2026") {
+      document.cookie = "admin_session=true; path=/; max-age=86400"; // 24h
       router.push("/admin/dashboard");
-    }, 1500);
+    } else {
+      setError("Invalid credentials");
+      setLoading(false);
+    }
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle,rgba(255,255,255,0.05)_0%,transparent_70%)] pointer-events-none" />
-      
+    <main className="min-h-screen bg-black flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grain opacity-5 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle,rgba(0,242,255,0.03)_0%,transparent_70%)] pointer-events-none" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-[400px] relative z-10"
+        className="w-full max-w-[400px] z-10"
       >
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-heading font-black tracking-tighter mb-2">ONE WAY</h1>
-          <p className="text-accent text-[10px] font-bold tracking-[0.5em] uppercase">Control Center</p>
+          <h1 className="text-4xl font-heading font-black tracking-tighter uppercase mb-2">CONTROL CENTER</h1>
+          <p className="text-[10px] font-bold text-white/40 tracking-[0.4em] uppercase">Authentication Required</p>
         </div>
 
-        <div className="glass rounded-[2.5rem] p-10 space-y-8">
-          <h2 className="text-xl font-heading font-bold text-center">ADMIN AUTHENTICATION</h2>
-          
-          <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="glass rounded-[2rem] p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Username</label>
+              <label className="text-[9px] font-bold text-white/40 uppercase tracking-[0.4em] ml-4">Username</label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                 <input
                   type="text"
-                  placeholder="admin_id"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-accent transition-colors"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 pl-14 pr-6 outline-none focus:border-accent/30 transition-all"
+                  placeholder="admin"
+                  required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Password</label>
+              <label className="text-[9px] font-bold text-white/40 uppercase tracking-[0.4em] ml-4">Password</label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={18} />
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-2xl py-4 pl-14 pr-6 outline-none focus:border-accent/30 transition-all"
                   placeholder="••••••••"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-accent transition-colors"
+                  required
                 />
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-black font-heading font-black py-5 rounded-3xl flex items-center justify-center gap-2 glow-white disabled:opacity-50"
-            >
-              {loading ? "AUTHENTICATING..." : "SYSTEM LOGIN"} 
-              {!loading && <ArrowRight size={18} />}
-            </button>
-          </form>
-        </div>
-        
-        <p className="text-center mt-12 text-[10px] text-white/20 tracking-[0.2em] font-bold uppercase">
-          Unauthorized Access is Strictly Prohibited
-        </p>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-400 text-[10px] font-bold text-center uppercase tracking-widest"
+              >
+                {error}
+              </motion.p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-white text-black py-6 rounded-3xl font-heading font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 active:scale-[0.98] transition-all glow-soft"
+          >
+            {loading ? <Loader2 className="animate-spin" size={20} /> : (
+              <>
+                AUTHENTICATE <ArrowRight size={20} />
+              </>
+            )}
+          </button>
+        </form>
       </motion.div>
     </main>
   );

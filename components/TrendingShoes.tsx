@@ -20,11 +20,11 @@ export default function TrendingShoes() {
           viewport={{ once: true }}
         >
           <h2 className="text-4xl font-heading font-black tracking-tighter uppercase leading-none mb-2">Trending</h2>
-          <p className="text-white/20 text-[10px] font-black tracking-[0.4em] uppercase">Most Wanted Right Now</p>
+          <p className="text-label tracking-[0.4em]">Most Wanted Right Now</p>
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         {trending.map((shoe, idx) => (
           <motion.div
             key={shoe.id}
@@ -34,47 +34,37 @@ export default function TrendingShoes() {
             transition={{ delay: idx * 0.1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
             <Link href={`/product/${shoe.id}`}>
-              <div className="glass-dark rounded-[2.5rem] p-5 flex gap-6 items-center group relative overflow-hidden active:scale-[0.98] transition-all">
-                <div className="relative w-[120px] aspect-square bg-white/[0.03] rounded-[2rem] overflow-hidden flex-shrink-0">
+              <div className="glass-dark rounded-[2.5rem] p-4 flex gap-6 items-center group relative overflow-hidden active:scale-[0.98] transition-all border border-white/5">
+                <div className="relative w-24 h-24 bg-white/[0.02] rounded-2xl overflow-hidden flex-shrink-0">
                   <Image
                     src={shoe.image}
                     alt={shoe.name}
                     fill
                     className="object-contain p-3 group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                 </div>
 
-                <div className="flex-1 py-2 space-y-3">
+                <div className="flex-1 py-1 space-y-2">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-heading font-black text-lg leading-none uppercase tracking-tighter">{shoe.name}</h3>
-                    <ArrowUpRight size={16} className="text-white/20 group-hover:text-accent group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
+                    <h3 className="font-heading font-black text-base leading-none uppercase tracking-tighter">{shoe.name}</h3>
+                    <ArrowUpRight size={14} className="text-white/10 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                   </div>
                   
-                  <div className="flex items-center gap-4">
-                    <span className="text-accent font-black text-xl tracking-tighter">${shoe.price}</span>
-                    <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Available Now</span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {shoe.colors.map((color, i) => (
-                      <div
-                        key={i}
-                        className="w-2.5 h-2.5 rounded-full ring-1 ring-white/10"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <span className="text-accent font-black text-lg tracking-tighter">${shoe.price}</span>
+                    <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.2em]">Verified Drop</span>
                   </div>
                 </div>
                 
                 {/* Background Accent Glow */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/[0.02] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/[0.01] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               </div>
             </Link>
           </motion.div>
         ))}
       </div>
     </section>
+
   );
 }
 

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+import SplashScreen from "@/components/SplashScreen";
+import MobileNav from "@/components/MobileNav";
+
 
 const inter = Inter({
   variable: "--font-inter",
@@ -26,9 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body className={`${inter.variable} ${outfit.variable} font-sans bg-background text-foreground antialiased selection:bg-accent selection:text-background`}>
+        <SplashScreen />
         {children}
+        <MobileNav />
       </body>
     </html>
   );
 }
-

@@ -4,6 +4,7 @@ import FeaturedCollection from "@/components/FeaturedCollection";
 import TrendingShoes from "@/components/TrendingShoes";
 import LimitedEdition from "@/components/LimitedEdition";
 import Reviews from "@/components/Reviews";
+import Instagram from "@/components/Instagram";
 import Footer from "@/components/Footer";
 import { ShoppingBag, User, Search, Menu } from "lucide-react";
 
@@ -37,21 +38,7 @@ export default function Home() {
         <LimitedEdition />
         <Reviews />
         
-        {/* Instagram Grid Placeholder */}
-        <section className="py-20 px-6">
-          <div className="mb-10">
-            <h2 className="text-3xl font-heading font-black tracking-tight">INSTAGRAM</h2>
-            <p className="text-white/40 text-sm">Join the movement #ONEWAY</p>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square glass rounded-2xl overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10" />
-                <div className="w-full h-full bg-white/5 animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </section>
+        <Instagram />
 
         <Footer />
       </div>

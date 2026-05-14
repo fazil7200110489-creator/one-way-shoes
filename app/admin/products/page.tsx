@@ -11,27 +11,32 @@ import {
   Camera, 
   Save, 
   Loader2, 
-  LayoutDashboard, 
-  LogOut, 
-  CreditCard, 
-  Package 
+  Package,
+  ChevronRight,
+  MoreVertical,
+  Image as ImageIcon
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import AdminNavbar from "@/components/AdminNavbar";
+import MobileImageUpload from "@/components/MobileImageUpload";
+import { supabase } from "@/lib/supabase";
 
 export default function AdminProducts() {
-
   const [productList, setProductList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [formData, setFormData] = useState({
+  const [isSaving, setIsSaving] = useState(false);
+  const initialForm = {
     name: "",
     price: "",
     stock: "",
     description: "",
-    image: "/images/hero_sneaker.png" // Default for now
-  });
+    images: [] as string[]
+  };
+
+  const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => {
     fetchProducts();
@@ -54,35 +59,73 @@ export default function AdminProducts() {
     }
   };
 
+  const handleEdit = (product: any) => {
+    setFormData({
+      name: product.name,
+      price: product.price.toString(),
+      stock: product.stock.toString(),
+      description: product.description || "",
+      images: product.images || []
+    });
+    setEditingId(product._id);
+    setIsAdding(true);
+  };
+
+  const resetForm = () => {
+    setFormData(initialForm);
+    setEditingId(null);
+    setIsAdding(false);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     try {
-      const res = await fetch("/api/products", {
-        method: "POST",
+      const url = editingId ? `/api/products/${editingId}` : "/api/products";
+      const method = editingId ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           price: Number(formData.price),
           stock: Number(formData.stock),
-          images: [formData.image],
           sizes: [7, 8, 9, 10, 11],
           colors: ["#000000", "#ffffff"]
         })
       });
       if (res.ok) {
-        setIsAdding(false);
+        resetForm();
         fetchProducts();
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure?")) return;
+  const handleDelete = async (shoe: any) => {
+    if (!confirm(`Are you sure you want to delete ${shoe.name}?`)) return;
     try {
-      await fetch(`/api/products/${id}`, { method: "DELETE" });
+      if (shoe.images && Array.isArray(shoe.images)) {
+        for (const url of shoe.images) {
+          if (url.includes("supabase.co")) {
+            try {
+              const bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || "products";
+              const urlParts = url.split(`/storage/v1/object/public/${bucket}/`);
+              if (urlParts.length >= 2) {
+                const filePath = urlParts[1];
+                await supabase.storage.from(bucket).remove([filePath]);
+              }
+            } catch (err) {
+              console.error("Failed to delete image from storage:", err);
+            }
+          }
+        }
+      }
+      await fetch(`/api/products/${shoe._id}`, { method: "DELETE" });
       fetchProducts();
     } catch (err) {
       console.error(err);
@@ -94,174 +137,201 @@ export default function AdminProducts() {
   );
 
   return (
-    <main className="min-h-screen bg-[#050505] text-white px-6 py-10 pb-32">
-      <header className="flex justify-between items-center mb-10">
+    <main className="min-h-screen bg-black text-white pb-40">
+      <div className="absolute inset-0 bg-grain opacity-5 pointer-events-none" />
+
+      {/* Sticky Top Bar */}
+      <div className="sticky top-0 z-50 glass-dark border-b border-white/5 px-6 py-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-heading font-black tracking-tighter uppercase">INVENTORY</h1>
-          <p className="text-[10px] font-bold text-white/40 tracking-[0.3em] uppercase">MANAGE SNEAKERS</p>
+          <h1 className="text-xl font-heading font-black tracking-tighter uppercase leading-none">Catalog</h1>
+          <p className="text-[8px] font-bold text-white/40 uppercase tracking-[0.4em] mt-1">Manage Inventory</p>
         </div>
-        <button
-          onClick={() => setIsAdding(true)}
-          className="bg-accent text-black p-3 rounded-2xl glow-accent"
-        >
-          <Plus size={24} />
-        </button>
-      </header>
-
-      {/* Search */}
-      <div className="relative mb-8">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={18} />
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-accent"
-        />
+        <div className="flex gap-2">
+           <button className="glass p-3 rounded-xl text-white/40"><Search size={18} /></button>
+        </div>
       </div>
 
-      {/* Product List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 opacity-20">
-            <Loader2 className="animate-spin mb-4" size={32} />
-            <p className="text-xs font-bold tracking-widest uppercase">Initializing Database...</p>
-          </div>
-        ) : filteredProducts.map((shoe, idx) => (
-          <motion.div
-            key={shoe._id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="glass p-4 rounded-[2rem] flex items-center gap-4"
-          >
-            <div className="relative w-16 h-16 bg-white/5 rounded-xl overflow-hidden flex-shrink-0">
-              <Image src={shoe.images?.[0] || "/images/hero_sneaker.png"} alt={shoe.name} fill className="object-contain p-1" />
+      <div className="px-6 py-8 space-y-8">
+        {/* Search Field */}
+        <div className="relative">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={18} />
+          <input
+            type="text"
+            placeholder="Search catalog..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-white/[0.03] border border-white/10 rounded-3xl py-5 pl-16 pr-6 outline-none focus:border-accent/30 transition-all font-medium text-sm"
+          />
+        </div>
+
+        {/* Product Grid - Mobile Optimized Cards */}
+        <div className="space-y-4">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 opacity-20">
+              <Loader2 className="animate-spin mb-4" size={32} />
+              <p className="text-xs font-black tracking-widest uppercase">Syncing Database...</p>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <h3 className="font-heading font-bold text-sm truncate uppercase">{shoe.name}</h3>
-              <div className="flex items-center gap-3">
-                <span className="text-accent text-xs font-bold">${shoe.price}</span>
-                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${shoe.stock < 10 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                  STOCK: {shoe.stock}
-                </span>
+          ) : filteredProducts.length > 0 ? filteredProducts.map((shoe, idx) => (
+            <motion.div
+              key={shoe._id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="glass p-4 rounded-[2.5rem] flex items-center gap-5 group active:bg-white/[0.03] transition-all relative overflow-hidden"
+            >
+              <div className="relative w-24 h-24 bg-white/[0.02] rounded-[1.8rem] overflow-hidden flex-shrink-0 border border-white/5">
+                <Image 
+                  src={shoe.images?.[0] || "/images/hero_sneaker.png"} 
+                  alt={shoe.name} 
+                  fill 
+                  className="object-cover p-2" 
+                />
               </div>
+              
+              <div className="flex-1 overflow-hidden">
+                <h3 className="font-heading font-black text-sm truncate uppercase tracking-tight mb-1">{shoe.name}</h3>
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-accent text-xs font-black">${shoe.price}</span>
+                  <span className="w-1 h-1 bg-white/10 rounded-full" />
+                  <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${shoe.stock < 10 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
+                    Stock: {shoe.stock}
+                  </span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleEdit(shoe)}
+                    className="bg-white/5 hover:bg-white/10 text-white/60 p-2 rounded-xl transition-colors"
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button 
+                    onClick={() => handleEdit(shoe)} // Reuse edit to show photos update
+                    className="bg-white/5 hover:bg-white/10 text-white/60 p-2 rounded-xl transition-colors"
+                  >
+                    <ImageIcon size={14} />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(shoe)}
+                    className="bg-red-500/5 hover:bg-red-500/10 text-red-400/60 p-2 rounded-xl transition-colors ml-auto"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )) : (
+            <div className="py-24 glass rounded-[3rem] text-center space-y-4 opacity-20 border-dashed border-white/10">
+                <Package size={48} className="mx-auto" />
+                <p className="text-xs font-black uppercase tracking-[0.2em]">Inventory Empty</p>
             </div>
-            <div className="flex gap-2">
-              <button className="glass p-2 rounded-xl text-white/60 hover:text-white"><Edit2 size={16} /></button>
-              <button 
-                onClick={() => handleDelete(shoe._id)}
-                className="glass p-2 rounded-xl text-red-400/60 hover:text-red-400"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </motion.div>
-        ))}
+          )}
+        </div>
       </div>
 
-      {/* Add Product Modal */}
+      {/* Add/Edit Product Immersive Modal */}
       <AnimatePresence>
         {isAdding && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-2xl px-6 py-10 overflow-y-auto"
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-[200] bg-black flex flex-col"
           >
-            <div className="flex justify-between items-center mb-10">
-              <h2 className="text-2xl font-heading font-black tracking-tighter">ADD NEW SNEAKER</h2>
-              <button onClick={() => setIsAdding(false)} className="glass p-2 rounded-full">
-                <X size={24} />
+            <div className="sticky top-0 z-[210] glass-dark border-b border-white/5 px-6 py-6 flex justify-between items-center">
+              <button onClick={resetForm} className="glass p-3 rounded-2xl text-white/40"><X size={20} /></button>
+              <h2 className="text-sm font-heading font-black tracking-widest uppercase">
+                {editingId ? "Edit Sneaker" : "New Sneaker"}
+              </h2>
+              <button 
+                onClick={(e) => handleSave(e as any)}
+                disabled={isSaving}
+                className="bg-accent text-black p-3 rounded-2xl glow-accent disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-6 pb-20">
+            <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10 pb-20">
+              {/* Image Section */}
               <div className="space-y-4">
-                <div className="glass rounded-[2rem] h-48 border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-2 overflow-hidden relative">
-                  {formData.image ? (
-                    <Image src={formData.image} alt="Preview" fill className="object-contain p-4" />
-                  ) : (
-                    <>
-                      <Camera size={32} className="text-white/20" />
-                      <p className="text-xs font-bold text-white/40 uppercase">Product Image Preview</p>
-                    </>
-                  )}
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Visual Assets</h3>
+                  <span className="text-[8px] font-bold text-accent uppercase">{formData.images.length}/6 Images</span>
                 </div>
+                <MobileImageUpload 
+                  value={formData.images}
+                  onChange={(images) => setFormData({ ...formData, images })}
+                />
+              </div>
+
+              {/* Core Details */}
+              <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Image URL</label>
+                  <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] ml-4">Product Name</label>
                   <input 
                     type="text" 
-                    value={formData.image}
-                    onChange={(e) => setFormData({...formData, image: e.target.value})}
-                    placeholder="https://example.com/shoe.png"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none text-xs" 
-                  />
-                </div>
-              </div>
-
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Product Name</label>
-                <input 
-                  type="text" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none" 
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Price ($)</label>
-                  <input 
-                    type="number" 
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="e.g. CYBER CORE X1"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 px-6 outline-none focus:border-accent/30 transition-all font-bold uppercase tracking-tight" 
                     required
                   />
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] ml-4">Price ($)</label>
+                    <input 
+                      type="number" 
+                      value={formData.price}
+                      onChange={(e) => setFormData({...formData, price: e.target.value})}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 px-6 outline-none focus:border-accent/30 transition-all font-bold" 
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] ml-4">Stock</label>
+                    <input 
+                      type="number" 
+                      value={formData.stock}
+                      onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 px-6 outline-none focus:border-accent/30 transition-all font-bold" 
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Stock</label>
-                  <input 
-                    type="number" 
-                    value={formData.stock}
-                    onChange={(e) => setFormData({...formData, stock: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none" 
-                    required
+                  <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] ml-4">Manifesto / Description</label>
+                  <textarea 
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Describe the aesthetic and performance..."
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 px-6 outline-none focus:border-accent/30 transition-all h-40 resize-none" 
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-4">Description</label>
-                <textarea 
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 outline-none h-32" 
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-accent text-black font-heading font-black py-5 rounded-3xl glow-accent flex items-center justify-center gap-2">
-                <Save size={20} /> SAVE PRODUCT
+              <button 
+                onClick={(e) => handleSave(e as any)}
+                disabled={isSaving}
+                className="w-full bg-white text-black font-heading font-black py-6 rounded-[2rem] glow-soft flex items-center justify-center gap-3 disabled:opacity-50 uppercase tracking-widest text-xs"
+              >
+                {isSaving ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Save size={18} />
+                )}
+                {isSaving ? "Syncing..." : "Publish Product"}
               </button>
-            </form>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Admin Bottom Navigation */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[450px] glass-dark rounded-full px-8 py-4 z-50 flex justify-between items-center border border-white/10 shadow-2xl">
-        <Link href="/admin/dashboard" className="text-white/40"><LayoutDashboard size={24} /></Link>
-        <Link href="/admin/products" className="text-accent"><Package size={24} /></Link>
-        <div className="w-14 h-14 bg-accent rounded-full flex items-center justify-center -mt-12 border-4 border-[#050505] shadow-xl">
-          <Plus size={24} className="text-black" />
-        </div>
-        <Link href="/admin/orders" className="text-white/40"><CreditCard size={24} /></Link>
-        <Link href="/" className="text-white/40"><LogOut size={24} /></Link>
-      </div>
+      <AdminNavbar onPlusClick={() => { resetForm(); setIsAdding(true); }} />
     </main>
   );
 }

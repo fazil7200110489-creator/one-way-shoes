@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import Image from "next/image";
 import { useState, useRef } from "react";
 import { ChevronLeft, ShoppingBag, Share2, Heart, Star, Check, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 import React from "react";
 
@@ -201,57 +202,94 @@ export default function ProductDetails({
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ delay: 1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed bottom-0 left-0 w-full px-6 py-10 glass-dark z-50 border-t border-white/5"
+        className="fixed bottom-0 left-0 w-full px-6 py-8 pb-12 glass-dark z-50 border-t border-white/5 md:hidden"
       >
-        <button
-          onClick={handleWhatsAppOrder}
-          className="w-full bg-white text-black font-heading font-black py-6 rounded-3xl flex items-center justify-center gap-4 active:scale-[0.98] transition-transform shadow-[0_0_40px_rgba(255,255,255,0.2)] group"
-        >
-          <ShoppingBag size={24} />
-          ORDER VIA WHATSAPP
-          <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-        </button>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="text-label">Total Price</span>
+            <span className="text-2xl font-heading font-black">${shoe.price}</span>
+          </div>
+          <button
+            onClick={handleWhatsAppOrder}
+            className="flex-1 bg-white text-black font-heading font-black py-5 rounded-3xl flex items-center justify-center gap-3 active:scale-[0.98] transition-transform shadow-[0_0_40px_rgba(255,255,255,0.2)] group"
+          >
+            <ShoppingBag size={20} />
+            ORDER NOW
+          </button>
+        </div>
       </motion.div>
 
-      {/* Immersive Success Overlay */}
+      {/* Related Products */}
+      <section className="px-6 py-24 pb-48">
+        <h3 className="text-label mb-8 px-2">Complete the Look</h3>
+        <div className="flex gap-6 overflow-x-auto hide-scrollbar snap-x">
+          {sneakers.filter(s => s.id !== shoe.id).slice(0, 3).map((s) => (
+            <Link key={s.id} href={`/product/${s.id}`} className="flex-shrink-0 w-[200px] snap-center">
+              <div className="glass rounded-[2rem] p-4 space-y-4">
+                <div className="relative aspect-square">
+                  <Image src={s.image} alt={s.name} fill className="object-contain" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest truncate">{s.name}</p>
+                  <p className="text-accent font-bold text-xs">${s.price}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Success / Payment Instruction Modal */}
       <AnimatePresence>
         {isOrdering && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center px-10 text-center"
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-3xl flex flex-col items-center justify-center px-8 text-center"
           >
-            <div className="absolute inset-0 bg-grain opacity-10" />
+            <div className="absolute inset-0 bg-grain opacity-10 pointer-events-none" />
+            
             <motion.div
-              initial={{ scale: 0, rotate: -45 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", damping: 12, delay: 0.2 }}
-              className="w-32 h-32 bg-accent rounded-full flex items-center justify-center mb-12 glow-accent"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="glass p-10 rounded-[3rem] w-full max-w-sm space-y-8"
             >
-              <Check size={64} className="text-black" />
-            </motion.div>
-            <h2 className="text-4xl font-heading font-black tracking-tighter mb-4 uppercase">Order Initialized</h2>
-            <p className="text-white/40 text-sm leading-relaxed mb-12 tracking-wide">
-              We have redirected you to our priority WhatsApp concierge. Please complete your payment details there.
-            </p>
-            <div className="w-full space-y-4">
+              <div className="w-20 h-20 bg-accent/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <Check size={40} className="text-accent" />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-3xl font-heading font-black tracking-tighter uppercase">ORDER INITIATED</h2>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.3em]">Next Steps</p>
+              </div>
+
+              <div className="space-y-4 text-left">
+                <div className="flex gap-4 items-start">
+                  <div className="w-6 h-6 bg-white/5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">1</div>
+                  <p className="text-[11px] text-white/60 leading-relaxed uppercase tracking-wide">Redirecting to WhatsApp to confirm your sizing and address.</p>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="w-6 h-6 bg-white/5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">2</div>
+                  <p className="text-[11px] text-white/60 leading-relaxed uppercase tracking-wide">Secure payment link or QR will be provided in chat.</p>
+                </div>
+              </div>
+
               <button
-                onClick={() => router.push("/payment")}
-                className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.2em]"
+                onClick={() => {
+                  const message = `*ONE WAY SHOES ORDER*%0A%0A*Model:* ${shoe.name}%0A*Size:* ${selectedSize}%0A*Color:* ${selectedColor}%0A*Price:* $${shoe.price}%0A%0A_Please verify my order details._`;
+                  window.open(`https://wa.me/1234567890?text=${message}`, "_blank");
+                  setIsOrdering(false);
+                }}
+                className="w-full bg-accent text-black py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px]"
               >
-                Go to Payment
+                PROCEED TO CHAT
               </button>
-              <button 
-                onClick={() => setIsOrdering(false)} 
-                className="text-[10px] font-black tracking-[0.4em] text-white/20 uppercase"
-              >
-                Close Window
-              </button>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </main>
   );
 }
