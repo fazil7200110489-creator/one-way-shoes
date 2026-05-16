@@ -24,8 +24,7 @@ export function getSupabase(): SupabaseClient {
     //     throw new Error('Supabase initialization error: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined.')
     //   }
     if (!url || !anonKey) {
-        console.warn('Supabase environment variables are missing.')
-        return null as unknown as SupabaseClient
+        throw new Error('Supabase Configuration Error: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set in your environment variables (e.g., Vercel Project Settings).');
     }
 
     cachedClient = createClient(url, anonKey)

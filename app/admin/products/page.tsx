@@ -19,9 +19,8 @@ import {
 import Image from "next/image";
 import AdminNavbar from "@/components/AdminNavbar";
 import MobileImageUpload from "@/components/MobileImageUpload";
+import MobileModelUpload from "@/components/MobileModelUpload";
 import { getSupabase } from "@/lib/supabase";
-
-const supabase = getSupabase();
 
 export default function AdminProducts() {
   const [productList, setProductList] = useState<any[]>([]);
@@ -35,7 +34,10 @@ export default function AdminProducts() {
     price: "",
     stock: "",
     description: "",
-    images: [] as string[]
+    images: [] as string[],
+    rotationImages: [] as string[],
+    model3DUrl: "",
+    isLimitedEdition: false
   };
 
   const [formData, setFormData] = useState(initialForm);
@@ -67,7 +69,10 @@ export default function AdminProducts() {
       price: product.price.toString(),
       stock: product.stock.toString(),
       description: product.description || "",
-      images: product.images || []
+      images: product.images || [],
+      rotationImages: product.rotationImages || [],
+      model3DUrl: product.model3DUrl || "",
+      isLimitedEdition: product.isLimitedEdition || false
     });
     setEditingId(product._id);
     setIsAdding(true);
@@ -94,15 +99,23 @@ export default function AdminProducts() {
           price: Number(formData.price),
           stock: Number(formData.stock),
           sizes: [7, 8, 9, 10, 11],
-          colors: ["#000000", "#ffffff"]
+          colors: ["#000000", "#ffffff"],
+          featured: true, // Default to true so it shows up on homepage
+          trending: true, // Default to true so it shows up on homepage
+          isLimitedEdition: formData.isLimitedEdition
         })
       });
       if (res.ok) {
+        alert("Product saved successfully!");
         resetForm();
         fetchProducts();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save product: ${errorData.error || res.statusText}\n${errorData.details || ''}`);
       }
     } catch (err) {
       console.error(err);
+      alert(`Network error: Could not connect to the database. Make sure your IP is whitelisted on MongoDB Atlas.`);
     } finally {
       setIsSaving(false);
     }
@@ -111,6 +124,7 @@ export default function AdminProducts() {
   const handleDelete = async (shoe: any) => {
     if (!confirm(`Are you sure you want to delete ${shoe.name}?`)) return;
     try {
+      const supabase = getSupabase();
       if (shoe.images && Array.isArray(shoe.images)) {
         for (const url of shoe.images) {
           if (url.includes("supabase.co")) {
@@ -125,6 +139,18 @@ export default function AdminProducts() {
               console.error("Failed to delete image from storage:", err);
             }
           }
+        }
+      }
+      if (shoe.model3DUrl && shoe.model3DUrl.includes("supabase.co")) {
+        try {
+          const bucket = process.env.NEXT_PUBLIC_SUPABASE_BUCKET || "products";
+          const urlParts = shoe.model3DUrl.split(`/storage/v1/object/public/${bucket}/`);
+          if (urlParts.length >= 2) {
+            const filePath = urlParts[1];
+            await supabase.storage.from(bucket).remove([filePath]);
+          }
+        } catch (err) {
+          console.error("Failed to delete model from storage:", err);
         }
       }
       await fetch(`/api/products/${shoe._id}`, { method: "DELETE" });
@@ -193,7 +219,7 @@ export default function AdminProducts() {
               <div className="flex-1 overflow-hidden">
                 <h3 className="font-heading font-black text-sm truncate uppercase tracking-tight mb-1">{shoe.name}</h3>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-accent text-xs font-black">${shoe.price}</span>
+                  <span className="text-accent text-xs font-black">₹{shoe.price}</span>
                   <span className="w-1 h-1 bg-white/10 rounded-full" />
                   <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase ${shoe.stock < 10 ? 'bg-red-500/10 text-red-400' : 'bg-green-500/10 text-green-400'}`}>
                     Stock: {shoe.stock}
@@ -256,16 +282,65 @@ export default function AdminProducts() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10 pb-20">
-              {/* Image Section */}
+              {/* Main Gallery */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center px-2">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Visual Assets</h3>
-                  <span className="text-[8px] font-bold text-accent uppercase">{formData.images.length}/6 Images</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Main Gallery</h3>
+                  <span className="text-[8px] font-bold text-accent uppercase">{formData.images.length} Images</span>
                 </div>
                 <MobileImageUpload 
                   value={formData.images}
                   onChange={(images) => setFormData({ ...formData, images })}
                 />
+              </div>
+
+              {/* 360° Rotation Set */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">360° Rotation Set</h3>
+                  <span className="text-[8px] font-bold text-accent uppercase">{formData.rotationImages.length} Frames</span>
+                </div>
+                <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] px-2 -mt-2">Upload images in sequence for smooth rotation</p>
+                <MobileImageUpload 
+                  value={formData.rotationImages}
+                  onChange={(rotationImages) => setFormData({ ...formData, rotationImages })}
+                />
+              </div>
+
+              {/* 3D Model Asset */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#00f2ff]">Real 3D Asset (GLB/GLTF)</h3>
+                  <span className="text-[8px] font-bold text-accent uppercase">{formData.model3DUrl ? "Active" : "None"}</span>
+                </div>
+                <p className="text-[8px] text-white/30 uppercase tracking-[0.2em] px-2 -mt-2">Provide a true interactive 3D model for this product</p>
+                <MobileModelUpload 
+                  value={formData.model3DUrl}
+                  onChange={(model3DUrl) => setFormData({ ...formData, model3DUrl })}
+                />
+              </div>
+
+              {/* Status Toggles */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center px-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Product Status</h3>
+                </div>
+                <div className="glass p-5 rounded-[2rem] border border-white/5 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-tight">Limited Edition</p>
+                    <p className="text-[8px] text-white/30 uppercase tracking-widest mt-0.5">Show in exclusive drops section</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setFormData({ ...formData, isLimitedEdition: !formData.isLimitedEdition })}
+                    className={`w-14 h-8 rounded-full transition-all duration-500 relative ${formData.isLimitedEdition ? 'bg-accent' : 'bg-white/10'}`}
+                  >
+                    <motion.div 
+                      animate={{ x: formData.isLimitedEdition ? 24 : 4 }}
+                      className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow-lg`}
+                    />
+                  </button>
+                </div>
               </div>
 
               {/* Core Details */}
@@ -284,7 +359,7 @@ export default function AdminProducts() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] ml-4">Price ($)</label>
+                    <label className="text-[9px] font-bold text-white/20 uppercase tracking-[0.4em] ml-4">Price (₹)</label>
                     <input 
                       type="number" 
                       value={formData.price}
@@ -333,7 +408,17 @@ export default function AdminProducts() {
         )}
       </AnimatePresence>
 
-      <AdminNavbar onPlusClick={() => { resetForm(); setIsAdding(true); }} />
+      {/* Floating Action Button */}
+      <motion.button 
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        onClick={() => { resetForm(); setIsAdding(true); }}
+        className="fixed bottom-28 right-8 w-16 h-16 bg-accent rounded-2xl flex items-center justify-center z-[90] shadow-[0_20px_40px_rgba(0,242,255,0.3)] active:scale-90 transition-transform group"
+      >
+        <Plus size={28} className="text-black group-hover:rotate-90 transition-transform duration-500" />
+      </motion.button>
+
+      <AdminNavbar />
     </main>
   );
 }

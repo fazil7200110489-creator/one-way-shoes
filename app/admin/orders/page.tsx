@@ -141,7 +141,7 @@ export default function AdminOrders() {
               <div className="flex justify-between items-end pt-2 border-t border-white/5">
                 <div>
                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">{order.productName}</p>
-                   <p className="text-lg font-heading font-black text-white/90">${order.amount}</p>
+                   <p className="text-lg font-heading font-black text-white/90">₹{order.amount}</p>
                 </div>
                 <div className="flex items-center gap-1 text-accent text-[9px] font-black uppercase tracking-widest mb-1">
                    Details <ChevronRight size={12} />
@@ -202,7 +202,7 @@ export default function AdminOrders() {
                       <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center text-white/40"><CreditCard size={18} /></div>
                       <div>
                          <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Total</p>
-                         <p className="text-sm font-bold">${selectedOrder.amount}</p>
+                         <p className="text-sm font-bold">₹{selectedOrder.amount}</p>
                       </div>
                    </div>
                    <div className="glass p-6 rounded-3xl flex items-center gap-4">

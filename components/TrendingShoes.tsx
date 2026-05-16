@@ -1,13 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { sneakers } from "@/lib/data";
 import { Heart, ShoppingBag, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 export default function TrendingShoes() {
-  const trending = sneakers.filter(s => s.trending);
+  const [trending, setTrending] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then(res => res.json())
+      .then(data => {
+        setTrending(data.filter((s: any) => s.trending));
+        setLoading(false);
+      })
+      .catch(console.error);
+  }, []);
+
+  if (loading) return <div className="py-24 flex justify-center"><div className="w-8 h-8 border-2 border-white/20 border-t-accent rounded-full animate-spin" /></div>;
+  if (trending.length === 0) return null;
 
   return (
     <section className="py-24 px-6 relative overflow-hidden">
@@ -27,17 +41,17 @@ export default function TrendingShoes() {
       <div className="grid grid-cols-1 gap-4">
         {trending.map((shoe, idx) => (
           <motion.div
-            key={shoe.id}
+            key={shoe._id || shoe.id}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ delay: idx * 0.1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Link href={`/product/${shoe.id}`}>
+            <Link href={`/product/${shoe._id || shoe.id}`}>
               <div className="glass-dark rounded-[2.5rem] p-4 flex gap-6 items-center group relative overflow-hidden active:scale-[0.98] transition-all border border-white/5">
                 <div className="relative w-24 h-24 bg-white/[0.02] rounded-2xl overflow-hidden flex-shrink-0">
                   <Image
-                    src={shoe.image}
+                    src={shoe.images?.[0] || shoe.image}
                     alt={shoe.name}
                     fill
                     className="object-contain p-3 group-hover:scale-110 transition-transform duration-700"
@@ -46,12 +60,17 @@ export default function TrendingShoes() {
 
                 <div className="flex-1 py-1 space-y-2">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-heading font-black text-base leading-none uppercase tracking-tighter">{shoe.name}</h3>
+                    <div className="flex flex-col gap-1 items-start">
+                      <h3 className="font-heading font-black text-base leading-none uppercase tracking-tighter">{shoe.name}</h3>
+                      {shoe.isLimitedEdition && (
+                        <span className="text-[6px] font-black bg-accent text-black px-2 py-0.5 rounded-full uppercase tracking-widest">Limited</span>
+                      )}
+                    </div>
                     <ArrowUpRight size={14} className="text-white/10 group-hover:text-accent group-hover:translate-x-1 transition-all" />
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <span className="text-accent font-black text-lg tracking-tighter">${shoe.price}</span>
+                    <span className="text-accent font-black text-lg tracking-tighter">₹{shoe.price}</span>
                     <span className="text-[7px] font-bold text-white/20 uppercase tracking-[0.2em]">Verified Drop</span>
                   </div>
                 </div>

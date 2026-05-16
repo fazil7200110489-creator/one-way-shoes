@@ -12,15 +12,15 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-black text-white relative">
       <SplashScreen />
-      
+
       {/* Premium Navbar */}
       <nav className="fixed top-0 left-0 w-full z-50 px-6 py-6 flex justify-between items-center glass-dark">
         <div className="flex items-center gap-2">
           <Menu size={20} className="text-white/60" />
         </div>
-        
+
         <h1 className="text-xl font-heading font-black tracking-tighter">ONE WAY</h1>
-        
+
         <div className="flex items-center gap-4">
           <Search size={20} className="text-white/60" />
           <div className="relative">
@@ -37,7 +37,7 @@ export default function Home() {
         <TrendingShoes />
         <LimitedEdition />
         <Reviews />
-        
+
         <Instagram />
 
         <Footer />

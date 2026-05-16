@@ -97,6 +97,20 @@ body {
   animation: pulse-soft 4s ease-in-out infinite;
 }
 
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
 /* Typography Scale */
 h1 { @apply text-6xl md:text-8xl font-heading font-black tracking-tighter leading-[0.9]; }
 h2 { @apply text-4xl md:text-5xl font-heading font-black tracking-tight leading-none; }

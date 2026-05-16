@@ -7,16 +7,13 @@ import {
   Package, 
   CreditCard, 
   BarChart3,
-  Settings,
-  Plus
+  Settings
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface AdminNavbarProps {
-  onPlusClick?: () => void;
-}
+interface AdminNavbarProps {}
 
-export default function AdminNavbar({ onPlusClick }: AdminNavbarProps) {
+export default function AdminNavbar({}: AdminNavbarProps) {
   const pathname = usePathname();
 
   const navItems = [
@@ -57,18 +54,6 @@ export default function AdminNavbar({ onPlusClick }: AdminNavbarProps) {
           })}
         </div>
       </div>
-
-      {/* Floating Action Button (Only on relevant pages) */}
-      {(pathname === "/admin/products" || pathname === "/admin/orders") && (
-        <motion.button 
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          onClick={onPlusClick}
-          className="fixed bottom-28 right-8 w-16 h-16 bg-accent rounded-2xl flex items-center justify-center z-[90] shadow-[0_20px_40px_rgba(0,242,255,0.3)] active:scale-90 transition-transform group"
-        >
-          <Plus size={28} className="text-black group-hover:rotate-90 transition-transform duration-500" />
-        </motion.button>
-      )}
     </>
   );
 }

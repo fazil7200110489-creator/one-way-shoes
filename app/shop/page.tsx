@@ -67,6 +67,11 @@ export default function ShopPage() {
               <div key={i} className="aspect-[3/4] glass rounded-[2.5rem] animate-pulse" />
             ))}
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 opacity-50">
+            <ShoppingBag size={48} className="mb-4" />
+            <p className="text-sm font-black tracking-widest uppercase">No drops found</p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
             {filtered.map((shoe, idx) => (
@@ -80,7 +85,7 @@ export default function ShopPage() {
                   <div className="glass rounded-[2.5rem] p-6 relative overflow-hidden group">
                     <div className="relative aspect-square mb-6">
                       <Image
-                        src={shoe.images?.[0] || shoe.image}
+                        src={shoe.images?.[0] || shoe.image || "/images/placeholder.png"}
                         alt={shoe.name}
                         fill
                         className="object-contain transition-transform duration-700 group-hover:scale-110"
@@ -89,7 +94,7 @@ export default function ShopPage() {
                     <div className="space-y-1">
                       <h3 className="font-heading font-black text-sm tracking-tighter uppercase truncate">{shoe.name}</h3>
                       <div className="flex justify-between items-center">
-                        <span className="text-accent font-black tracking-tighter text-lg">${shoe.price}</span>
+                        <span className="text-accent font-black tracking-tighter text-lg">₹{shoe.price}</span>
                         <div className="flex items-center gap-1 opacity-40">
                           <Star size={10} fill="currentColor" />
                           <span className="text-[10px] font-bold">{shoe.rating || "5.0"}</span>

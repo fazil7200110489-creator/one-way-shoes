@@ -46,7 +46,7 @@ export default function AdminDashboard() {
         const totalInventory = products.reduce((acc: number, p: any) => acc + (p.stock || 0), 0);
 
         setStats([
-          { label: "Revenue", value: `$${totalRevenue.toLocaleString()}`, icon: <BarChart3 size={20} />, color: "bg-accent/10 text-accent", trend: "+12%" },
+          { label: "Revenue", value: `₹${totalRevenue.toLocaleString()}`, icon: <BarChart3 size={20} />, color: "bg-accent/10 text-accent", trend: "+12%" },
           { label: "Pending", value: activeOrders.toString(), icon: <CreditCard size={20} />, color: "bg-yellow-400/10 text-yellow-400", trend: "Active" },
           { label: "Stock", value: totalInventory.toString(), icon: <Package size={20} />, color: "bg-blue-400/10 text-blue-400", trend: "Units" },
           { label: "Users", value: new Set(orders.map(o => o.customerPhone)).size.toString(), icon: <Users size={20} />, color: "bg-purple-400/10 text-purple-400", trend: "Unique" },
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end gap-1">
-                  <p className="text-sm font-black text-white/90">${order.amount}</p>
+                  <p className="text-sm font-black text-white/90">₹{order.amount}</p>
                   <span className={`text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${
                     order.status === 'Verified' ? 'bg-green-500/10 text-green-400' : 
                     order.status === 'Pending' ? 'bg-yellow-400/10 text-yellow-400' : 
